@@ -257,4 +257,51 @@ gene_names <- select(gene_names_big,Gene=gene,Name=orf)
 {: .challenge}
 
 
+## What is NOP56 doing?
+
+```{r, eval = TRUE, purl = TRUE}
+
+mRNA_data <- read_tsv("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset01.txt.gz")
+
+names(mRNA_data)[1] <- "Name"
+
+mRNA_data <- left_join(mRNA_data,gene_names)
+```
+
+```{r, eval = TRUE, purl = TRUE}
+
+filter(mRNA_data, Gene=="NOP56")
+
+filter(mRNA_data, Gene %in% c("ACT1","NOP16","NOP56"))
+```
+
+## Recreating the heatmap in figure 2.
+
+```{r, message = FALSE, purl = FALSE, eval=FALSE}
+## load the tidyverse packages, incl. dplyr
+install.packages("pheatmap")
+```
+
+```{r, message = FALSE, purl = FALSE}
+## load pheatmap
+library("pheatmap")
+```
+
+
+```{r, eval = TRUE, purl = TRUE}
+
+mRNA_data_per_noname <- filter(mRNA_data,Name %in% periodic_list) %>%
+    select(-Name,-Gene)
+pheatmap(mRNA_data_per_noname)
+
+```
+
+
+```{r, eval = TRUE, purl = TRUE}
+row.names(mRNA_data_per_noname) <- filter(mRNA_data,Name %in% periodic_list)$Name
+pheatmap(mRNA_data_per_noname,cluster_cols=FALSE)
+```
+
+That's figure 2!
+
 {% include links.md %}

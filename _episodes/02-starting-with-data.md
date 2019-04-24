@@ -524,4 +524,135 @@ gene_names <- select(gene_names_big,Gene=gene,Name=orf)
 {: .challenge}
 
 
+## What is NOP56 doing?
+
+
+~~~
+mRNA_data <- read_tsv("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset01.txt.gz")
+~~~
+{: .language-r}
+
+
+
+~~~
+Parsed with column specification:
+cols(
+  ORF = col_character(),
+  `40 fL` = col_double(),
+  `45 fL` = col_double(),
+  `50 fL` = col_double(),
+  `55 fL` = col_double(),
+  `60 fL` = col_double(),
+  `65 fL` = col_double(),
+  `70 fL` = col_double(),
+  `75 fL` = col_double()
+)
+~~~
+{: .output}
+
+
+
+~~~
+names(mRNA_data)[1] <- "Name"
+
+mRNA_data <- left_join(mRNA_data,gene_names)
+~~~
+{: .language-r}
+
+
+
+~~~
+Joining, by = "Name"
+~~~
+{: .output}
+
+
+~~~
+filter(mRNA_data, Gene=="NOP56")
+~~~
+{: .language-r}
+
+
+
+~~~
+# A tibble: 1 x 10
+  Name  `40 fL` `45 fL` `50 fL` `55 fL` `60 fL` `65 fL` `70 fL` `75 fL`
+  <chr>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+1 YLR1…   0.594   0.772  0.0101  -0.209  0.0770  -0.786  -0.351   -1.02
+# ... with 1 more variable: Gene <chr>
+~~~
+{: .output}
+
+
+
+~~~
+filter(mRNA_data, Gene %in% c("ACT1","NOP16","NOP56"))
+~~~
+{: .language-r}
+
+
+
+~~~
+# A tibble: 3 x 10
+  Name  `40 fL` `45 fL` `50 fL` `55 fL` `60 fL` `65 fL` `70 fL` `75 fL`
+  <chr>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+1 YER0…   0.687   0.706  0.203  -0.0884 -0.698   -0.708  -1.05  -0.0681
+2 YFL0…  -0.366  -0.940 -0.191  -0.0418 -0.0523   0.180   0.379  0.544 
+3 YLR1…   0.594   0.772  0.0101 -0.209   0.0770  -0.786  -0.351 -1.02  
+# ... with 1 more variable: Gene <chr>
+~~~
+{: .output}
+
+## Recreating the heatmap in figure 2.
+
+
+~~~
+## load the tidyverse packages, incl. dplyr
+install.packages("pheatmap")
+~~~
+{: .language-r}
+
+
+~~~
+## load pheatmap
+library("pheatmap")
+~~~
+{: .language-r}
+
+
+
+~~~
+mRNA_data_per_noname <- filter(mRNA_data,Name %in% periodic_list) %>%
+    select(-Name,-Gene)
+pheatmap(mRNA_data_per_noname)
+~~~
+{: .language-r}
+
+<img src="../fig/rmd-unnamed-chunk-22-1.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" width="612" style="display: block; margin: auto;" />
+
+
+
+~~~
+row.names(mRNA_data_per_noname) <- filter(mRNA_data,Name %in% periodic_list)$Name
+~~~
+{: .language-r}
+
+
+
+~~~
+Warning: Setting row names on a tibble is deprecated.
+~~~
+{: .error}
+
+
+
+~~~
+pheatmap(mRNA_data_per_noname,cluster_cols=FALSE)
+~~~
+{: .language-r}
+
+<img src="../fig/rmd-unnamed-chunk-23-1.png" title="plot of chunk unnamed-chunk-23" alt="plot of chunk unnamed-chunk-23" width="612" style="display: block; margin: auto;" />
+
+That's figure 2!
+
 {% include links.md %}
