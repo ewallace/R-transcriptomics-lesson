@@ -29,7 +29,7 @@ Here the dataset is of cell cycle progression in the yeast *Saccharomyces cerevi
 In figure 2, the paper notes that ribosome biogenesis genes are periodically expressed during the cell cycle, but doesn't tell us which ones. **Can we find if our favourite gene is indeed periodically expressed?** So our data analysis goals are:
 
 * Find which ribosome biogenesis genes are on the list in figure 2
-* Plot the individual trajectories of favourites: NOP56, ACT1
+* Is our favourite gene NOP56  (fibrillarin) periodically expressed?
 * Recreate figure 2 so we can read the gene names.
 
 # Data Manipulation using **tidyverse**
