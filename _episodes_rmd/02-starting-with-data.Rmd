@@ -1,0 +1,260 @@
+---
+title: "Starting with data"
+author: "Data Carpentry contributors"
+minutes: 20
+---
+
+```{r, echo=FALSE}
+source("../bin/chunk-options.R")
+```
+
+------------
+
+> ### Learning Objectives
+>
+> * Load external data from a .csv file into a data frame.
+> * Describe what a data frame is.
+> * Summarize the contents of a data frame.
+> * Use indexing to subset specific portions of data frames. 
+
+
+------------
+
+## Our biological question: do our favourite genes change expression in this dataset?
+
+This workshop is based around a common situation in transcriptomics. We are interested in a group of genes, and another study has measured expression in  conditions where expression these genes might be interesting. Can we tell if our favourite genes have changing expression?
+
+Here the dataset is of cell cycle progression in the yeast *Saccharomyces cerevisiae*, from this paper: Translational control of lipogenic enzymes in the cell cycle of synchronous, growing yeast cells. Blank et al 2017 https://doi.org/10.15252/embj.201695050.
+
+In figure 2, the paper notes that ribosome biogenesis genes are periodically expressed during the cell cycle, but doesn't tell us which ones. **Can we find if our favourite gene is indeed periodically expressed?** So our data analysis goals are:
+
+* Find which ribosome biogenesis genes are on the list in figure 2
+* Plot the individual trajectories of favourites: NOP56, ACT1
+* Recreate figure 2 so we can read the gene names.
+
+# Data Manipulation using **tidyverse**
+
+Packages in R are basically sets of additional functions that let you do more
+stuff. The functions we've been using so far, like `str()`,
+come built into R; packages give you access to more of them. Before you use a
+package for the first time you need to install it on your machine, and then you
+should import it in every subsequent R session when you need it. You should
+already have installed the **`tidyverse`** package. This is an
+"umbrella-package" that installs several packages useful for data analysis which
+work together well such as **`readr`**, **`tidyr`**, **`dplyr`**, **`ggplot2`**, **`tibble`**, etc.
+
+
+The **`tidyverse`** package tries to address 3 common issues that arise when
+doing data analysis with some of the functions that come with R:
+
+1. The results from a base R function sometimes depend on the type of data.
+2. Using R expressions in a non standard way, which can be confusing for new
+   learners.
+3. Hidden arguments, having default operations that new learners are not aware
+   of.
+
+
+
+To load the package type:
+
+
+```{r, message = FALSE, purl = FALSE}
+## load the tidyverse packages, incl. dplyr
+library("tidyverse")
+```
+
+## What are **`readr`**, **`dplyr`** and **`tidyr`**?
+
+
+We'll read in our data using `read_lines()` and `read_tsv()` functions, from the tidyverse package 
+The package **`readr`**.
+
+The package **`dplyr`** provides easy tools for the most common data manipulation
+tasks. It is built to work directly with data frames, with many common tasks
+optimized by being written in a compiled language (C++). An additional feature is the
+ability to work directly with data stored in an external database. The benefits of
+doing this are that the data can be managed natively in a relational database,
+queries can be conducted on that database, and only the results of the query are
+returned.
+
+This addresses a common problem with R in that all operations are conducted
+in-memory and thus the amount of data you can work with is limited by available
+memory. The database connections essentially remove that limitation in that you
+can connect to a database of many hundreds of GB, conduct queries on it directly, and pull
+back into R only what you need for analysis.
+
+The package **`tidyr`** addresses the common problem of wanting to reshape your data for plotting and use by different R functions. Sometimes we want data sets where we have one row per measurement. Sometimes we want a data frame where each measurement type has its own column, and rows are instead more aggregated groups - like plots or aquaria. Moving back and forth between these formats is nontrivial, and **`tidyr`** gives you tools for this and more sophisticated  data manipulation.
+
+To learn more about **`dplyr`** and **`tidyr`** after the workshop, you may want to check out this
+[handy data transformation with **`dplyr`** cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/data-transformation.pdf) and this [one about **`tidyr`**](https://github.com/rstudio/cheatsheets/raw/master/data-import.pdf).
+
+
+
+
+## Which ribosome biogenesis genes are in the list?
+
+We need the list from figure 2 of the paper, and a list of ribosomal biogenesis (ribi) genes.
+
+### List of genes from figure 2 in the paper
+
+The paper says:
+
+    * We then used the log2-transformations of these ratio values as input (see Fig 2 and Dataset 1 within the Source Data for this figure; also deposited in GEO:GSE81932).
+    * Heatmap of the mRNA levels of the 144 genes (Dataset 2 within the Source Data for this figure) in common between the “Spellman Elu” and “This study” datasets.
+
+This tells us that there are two sources for the data, one at the journal website and the other at NCBI's Gene Expression Omnibus. We can now search GEO:GSE81932, and see the website: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932.
+
+And at the bottom, there is GSE81932_Dataset02.txt.gz. Let's download that, using a function called `read_lines()`.
+
+```{r, eval = FALSE, purl = FALSE}
+## Ask for help on read_lines
+?read_lines
+```
+
+The help tells us about an `n_max` argument that controls how many lines we read. This is useful to inspect a file to see what it looks like before getting started. These functions can read data directly from online URLs, and automatically deal with compressed .gz files, which is very useful.
+
+It will be easier if we make the file location an object rather than having to type it repeatedly. So let's read the first few lines of the file to check what it contains:
+
+```{r, eval = TRUE, purl = TRUE}
+## Ask for help on read_lines
+periodic_list_file <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset02.txt.gz"
+
+read_lines(periodic_list_file,n_max=10)
+```
+
+
+The output looks like a character vector containing gene names, which is what we want, so let's load that into an object in our workspace.
+
+```{r, eval=TRUE, purl=TRUE}
+periodic_list <- read_lines(periodic_list_file)
+```
+
+Now we have the list of genes.
+
+
+> ## Challenge:
+>
+> 1. How many genes are on the list?
+> 2. Can you see the last genes in the list?
+>
+> > ## Solution
+> >
+> > ```{r, echo=FALSE}
+> > length(periodic_list)
+> > tail(periodic_list)
+> > ```
+> {: .solution}
+{: .challenge}
+
+
+### List of ribosomal biogenesis (ribi) genes.
+
+For this lesson, we will use the list of yeast ribi genes from https://www.yeastgenome.org/go/GO:0042254
+
+Go to the *bottom* of the page for the longer computational list, click download and place the file in your `data` directory. You'll need to have a folder on your machine called "data" where you'll download the file. Take a look at it.
+
+
+```{r, eval=TRUE, purl=TRUE}
+
+ribi_annotation_file <- "data/ribosome_biogenesis_annotations.txt"
+
+read_lines(ribi_annotation_file,n_max=10)
+```
+
+What does this tell us about the file?  It is a text file, the first few lines start with a `!` character, and afterwards the tab-delimited table starts with tabs encoded as `\t`.
+
+We are going to use the tidyverse function `read_tsv()` to read the contents of this file into R as a tibble (nice data frame) object. Inside the `read_tsv()` command, the first entry is a character string with the file name ("data/ribosome_biogenesis_annotations.txt")
+
+We can remove the unwanted lines in two ways. We can either skip them:
+
+```{r, eval=TRUE,  purl=FALSE}
+read_tsv(ribi_annotation_file,skip=7)
+```
+
+Or we can tell R that the `!` is a comment character, and lines after that should be ignored.
+
+```{r, eval=TRUE,  purl=FALSE}
+read_tsv(ribi_annotation_file,comment="!")
+```
+
+Because we will need to reuse, let's make the list into an object
+
+```{r, eval=TRUE,  purl=FALSE}
+ribi_annotation <- read_tsv(ribi_annotation_file,comment="!")
+```
+
+This statement doesn't produce any output because, as you might recall,
+assignments don't display anything. If we want to check that our data has been
+loaded, we can see the contents of the data frame by typing its name: `ribi_annotation`.
+
+```{r, eval = FALSE, purl = FALSE}
+## Try also
+View(ribi_annotation)
+```
+
+Now we have our data in R, we're going to learn how to inspect it, and some of the most common **`dplyr`** functions:
+
+- `select()`: subset columns
+- `n_distinct()` and `distinct()`: count or filter unique rows
+- `filter()`: subset rows on conditions
+- `mutate()`: create new columns by using information from other columns
+- `group_by()` and `summarize()`: create summary statisitcs on grouped data
+- `arrange()`: sort results
+- `count()`: count discrete values
+
+
+
+### Give nice names: 
+
+```{r, eval = TRUE, purl = TRUE}
+ribi_annotation_names <- select(ribi_annotation,Gene,Name="Gene Systematic Name")
+n_distinct(ribi_annotation_names)
+
+ribi_genes <- distinct(ribi_annotation_names)
+```
+
+
+##  So which ribi genes are periodically expressed?
+
+```{r, eval = TRUE, purl = TRUE}
+filter(ribi_genes, Name %in% periodic_list)
+```
+
+Many of them.
+
+## Getting nicer gene names
+
+Gene names are in a nice format here:
+https://datadryad.org/bitstream/handle/10255/dryad.85608
+
+```{r, eval = TRUE, purl = TRUE}
+gene_name_file <- "https://datadryad.org/bitstream/handle/10255/dryad.85608/scer-mrna-protein-absolute-estimate.txt"
+
+read_lines(gene_name_file,n_max=10)
+```
+
+```{r, eval = TRUE, purl = TRUE}
+gene_names_big <- read_tsv(gene_name_file,comment="#")
+```
+
+```{r, eval = TRUE, purl = TRUE}
+gene_names <- select(gene_names_big,Gene=gene,Name=orf)
+```
+
+
+> ## Challenge: 
+>
+> 1. What are the names of the genes on the periodic list?
+> 2. Is NOP56 on the list?
+>
+> > ## Solution
+> >
+> > ```{r, echo=TRUE}
+> > filter(gene_names,Name %in% periodic_list)
+> > filter(gene_names,Name == "NOP56")
+> > ```
+> {: .solution}
+{: .challenge}
+
+
+{% include links.md %}
