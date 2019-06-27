@@ -10,7 +10,7 @@
 carpentry: "dc"
 
 # Overall title for pages.
-title: "R for Transcriptomic analysis"
+title: "Exploring tabular data with R using a transcriptomic example dataset."
 
 # Life cycle stage of the lesson
 # possible values: "pre-alpha", "alpha", "beta", "stable"
