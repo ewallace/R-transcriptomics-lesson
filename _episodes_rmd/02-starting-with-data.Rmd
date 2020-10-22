@@ -4,7 +4,7 @@ author: "Data Carpentry contributors"
 minutes: 20
 ---
 
-```{r, echo=FALSE}
+```{r, echo = FALSE}
 source("../bin/chunk-options.R")
 ```
 
@@ -24,13 +24,13 @@ source("../bin/chunk-options.R")
 
 This workshop is based around a common situation in transcriptomics. We are interested in a group of genes, and another study has measured expression in  conditions where expression these genes might be interesting. Can we tell if our favourite genes have changing expression?
 
-Here the dataset is of cell cycle progression in the yeast *Saccharomyces cerevisiae*, from this paper: Translational control of lipogenic enzymes in the cell cycle of synchronous, growing yeast cells. Blank et al 2017 https://doi.org/10.15252/embj.201695050.
+Here the dataset is of cell cycle progression in the yeast *Saccharomyces cerevisiae*, from this paper: Translational control of lipogenic enzymes in the cell cycle of synchronous, growing yeast cells. [Blank et al 2017](https://doi.org/10.15252/embj.201695050).
 
-In figure 2, the paper notes that ribosome biogenesis genes are periodically expressed during the cell cycle, but doesn't tell us which ones. **Can we find if our favourite gene is indeed periodically expressed?** So our data analysis goals are:
+In Figure 2, the paper notes that ribosome biogenesis genes are periodically expressed during the cell cycle, but doesn't tell us which ones. **Can we find if our favourite gene is indeed periodically expressed?** So our data analysis goals are:
 
-* Find which ribosome biogenesis genes are on the list in figure 2
-* Is our favourite gene NOP56  (fibrillarin) periodically expressed?
-* Recreate figure 2 so we can read the gene names.
+* Find which ribosome biogenesis genes are on the list in Figure 2.
+* Is our favourite gene NOP56 (fibrillarin) periodically expressed?
+* Recreate Figure 2 so we can read the gene names.
 
 # Data Manipulation using **tidyverse**
 
@@ -41,7 +41,7 @@ package for the first time you need to install it on your machine, and then you
 should import it in every subsequent R session when you need it. You should
 already have installed the **`tidyverse`** package. This is an
 "umbrella-package" that installs several packages useful for data analysis which
-work together well such as **`readr`**, **`tidyr`**, **`dplyr`**, **`ggplot2`**, **`tibble`**, etc.
+work well together, such as **`readr`**, **`tidyr`**, **`dplyr`**, **`ggplot2`**, **`tibble`**, etc.
 
 
 The **`tidyverse`** package tries to address 3 common issues that arise when
@@ -63,11 +63,11 @@ To load the package type:
 library("tidyverse")
 ```
 
-## What are **`readr`**, **`dplyr`** and **`tidyr`**?
+## What are **`readr`**, **`dplyr`**, and **`tidyr`**?
 
 
 We'll read in our data using `read_lines()` and `read_tsv()` functions, from the tidyverse package 
-The package **`readr`**.
+**`readr`**.
 
 The package **`dplyr`** provides easy tools for the most common data manipulation
 tasks. It is built to work directly with data frames, with many common tasks
@@ -93,16 +93,16 @@ To learn more about **`dplyr`** and **`tidyr`** after the workshop, you may want
 
 ## Which ribosome biogenesis genes are in the list?
 
-We need the list from figure 2 of the paper, and a list of ribosomal biogenesis (ribi) genes.
+We need the list from Figure 2 of the paper, and a list of ribosomal biogenesis (ribi) genes.
 
-### List of genes from figure 2 in the paper
+### List of genes from Figure 2 in the paper
 
 The paper says:
 
-    * We then used the log2-transformations of these ratio values as input (see Fig 2 and Dataset 1 within the Source Data for this figure; also deposited in GEO:GSE81932).
-    * Heatmap of the mRNA levels of the 144 genes (Dataset 2 within the Source Data for this figure) in common between the “Spellman Elu” and “This study” datasets.
+> We then used the log2-transformations of these ratio values as input (see Fig 2 and Dataset 1 within the Source Data for this figure; also deposited in GEO:GSE81932).
+> Heatmap of the mRNA levels of the 144 genes (Dataset 2 within the Source Data for this figure) in common between the “Spellman Elu” and “This study” datasets.
 
-This tells us that there are two sources for the data, one at the journal website and the other at NCBI's Gene Expression Omnibus. We can now search GEO:GSE81932, and see the website: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932.
+This tells us that there are two sources for the data, one at the journal website and the other at NCBI's Gene Expression Omnibus. We can now search GEO:GSE81932, and see the website: [https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932).
 
 And at the bottom, there is GSE81932_Dataset02.txt.gz. Let's download that, using a function called `read_lines()`.
 
@@ -119,13 +119,13 @@ It will be easier if we make the file location an object rather than having to t
 ## Ask for help on read_lines
 periodic_list_file <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset02.txt.gz"
 
-read_lines(periodic_list_file,n_max=10)
+read_lines(periodic_list_file, n_max = 10)
 ```
 
 
 The output looks like a character vector containing gene names, which is what we want, so let's load that into an object in our workspace.
 
-```{r, eval=TRUE, purl=TRUE}
+```{r, eval = TRUE, purl = TRUE}
 periodic_list <- read_lines(periodic_list_file)
 ```
 
@@ -139,7 +139,7 @@ Now we have the list of genes.
 >
 > > ## Solution
 > >
-> > ```{r, echo=FALSE}
+> > ```{r, echo = FALSE}
 > > length(periodic_list)
 > > tail(periodic_list)
 > > ```
@@ -149,38 +149,38 @@ Now we have the list of genes.
 
 ### List of ribosomal biogenesis (ribi) genes.
 
-For this lesson, we will use the list of yeast ribi genes from https://www.yeastgenome.org/go/GO:0042254
+For this lesson, we will use the [list of yeast ribi genes](https://www.yeastgenome.org/go/GO:0042254).
 
 Go to the *bottom* of the page for the longer computational list, click download and place the file in your `data` directory. You'll need to have a folder on your machine called "data" where you'll download the file. Take a look at it.
 
 
-```{r, eval=TRUE, purl=TRUE}
+```{r, eval = TRUE, purl = TRUE}
 
 ribi_annotation_file <- "data/ribosome_biogenesis_annotations.txt"
 
-read_lines(ribi_annotation_file,n_max=10)
+read_lines(ribi_annotation_file, n_max = 10)
 ```
 
 What does this tell us about the file?  It is a text file, the first few lines start with a `!` character, and afterwards the tab-delimited table starts with tabs encoded as `\t`.
 
-We are going to use the tidyverse function `read_tsv()` to read the contents of this file into R as a tibble (nice data frame) object. Inside the `read_tsv()` command, the first entry is a character string with the file name ("data/ribosome_biogenesis_annotations.txt")
+We are going to use the tidyverse function `read_tsv()` to read the contents of this file into R as a tibble (nice data frame) object. Inside the `read_tsv()` command, the first entry is a character string with the file name `"data/ribosome_biogenesis_annotations.txt"`.
 
 We can remove the unwanted lines in two ways. We can either skip them:
 
-```{r, eval=TRUE,  purl=FALSE}
-read_tsv(ribi_annotation_file,skip=7)
+```{r, eval = TRUE, purl = FALSE}
+read_tsv(ribi_annotation_file, skip = 7)
 ```
 
-Or we can tell R that the `!` is a comment character, and lines after that should be ignored.
+Or we can tell R that the `!` is a comment character, and lines starting that should be ignored.
 
-```{r, eval=TRUE,  purl=FALSE}
-read_tsv(ribi_annotation_file,comment="!")
+```{r, eval = TRUE,  purl = FALSE}
+read_tsv(ribi_annotation_file, comment = "!")
 ```
 
-Because we will need to reuse, let's make the list into an object
+Because we will need to reuse, let's make the list into an object:
 
-```{r, eval=TRUE,  purl=FALSE}
-ribi_annotation <- read_tsv(ribi_annotation_file,comment="!")
+```{r, eval = TRUE,  purl = FALSE}
+ribi_annotation <- read_tsv(ribi_annotation_file, comment = "!")
 ```
 
 This statement doesn't produce any output because, as you might recall,
@@ -192,7 +192,7 @@ loaded, we can see the contents of the data frame by typing its name: `ribi_anno
 View(ribi_annotation)
 ```
 
-Now we have our data in R, we're going to learn how to inspect it, and some of the most common **`dplyr`** functions:
+Now we have our data in R, we're going to learn how to inspect it and use some of the most common **`dplyr`** functions:
 
 - `select()`: subset columns
 - `n_distinct()` and `distinct()`: count or filter unique rows
@@ -207,7 +207,7 @@ Now we have our data in R, we're going to learn how to inspect it, and some of t
 ### Give nice names: 
 
 ```{r, eval = TRUE, purl = TRUE}
-ribi_annotation_names <- select(ribi_annotation,Gene,Name="Gene Systematic Name")
+ribi_annotation_names <- select(ribi_annotation, Gene, Name = "Gene Systematic Name")
 n_distinct(ribi_annotation_names)
 
 ribi_genes <- distinct(ribi_annotation_names)
@@ -224,21 +224,20 @@ Many of them.
 
 ## Getting nicer gene names
 
-Gene names are in a nice format here:
-https://datadryad.org/bitstream/handle/10255/dryad.85608
+Gene names are in a nice format here: [https://datadryad.org/bitstream/handle/10255/dryad.85608](https://datadryad.org/bitstream/handle/10255/dryad.85608).
 
 ```{r, eval = TRUE, purl = TRUE}
 gene_name_file <- "https://datadryad.org/bitstream/handle/10255/dryad.85608/scer-mrna-protein-absolute-estimate.txt"
 
-read_lines(gene_name_file,n_max=10)
+read_lines(gene_name_file, n_max = 10)
 ```
 
 ```{r, eval = TRUE, purl = TRUE}
-gene_names_big <- read_tsv(gene_name_file,comment="#")
+gene_names_big <- read_tsv(gene_name_file, comment = "#")
 ```
 
 ```{r, eval = TRUE, purl = TRUE}
-gene_names <- select(gene_names_big,Gene=gene,Name=orf)
+gene_names <- select(gene_names_big, Gene = gene, Name = orf)
 ```
 
 
@@ -249,7 +248,7 @@ gene_names <- select(gene_names_big,Gene=gene,Name=orf)
 >
 > > ## Solution
 > >
-> > ```{r, echo=TRUE}
+> > ```{r, echo = TRUE}
 > > filter(gene_names,Name %in% periodic_list)
 > > filter(gene_names,Name == "NOP56")
 > > ```
@@ -270,14 +269,14 @@ mRNA_data <- left_join(mRNA_data,gene_names)
 
 ```{r, eval = TRUE, purl = TRUE}
 
-filter(mRNA_data, Gene=="NOP56")
+filter(mRNA_data, Gene == "NOP56")
 
-filter(mRNA_data, Gene %in% c("ACT1","NOP16","NOP56"))
+filter(mRNA_data, Gene %in% c("ACT1", "NOP16", "NOP56"))
 ```
 
-## Recreating the heatmap in figure 2.
+## Recreating the heatmap in Figure 2.
 
-```{r, message = FALSE, purl = FALSE, eval=FALSE}
+```{r, message = FALSE, purl = FALSE, eval = FALSE}
 ## load the tidyverse packages, incl. dplyr
 install.packages("pheatmap")
 ```
@@ -290,18 +289,18 @@ library("pheatmap")
 
 ```{r, eval = TRUE, purl = TRUE}
 
-mRNA_data_per_noname <- filter(mRNA_data,Name %in% periodic_list) %>%
-    select(-Name,-Gene)
+mRNA_data_per_noname <- filter(mRNA_data, Name %in% periodic_list) %>%
+    select(-Name, -Gene)
 pheatmap(mRNA_data_per_noname)
 
 ```
 
 
 ```{r, eval = TRUE, purl = TRUE}
-row.names(mRNA_data_per_noname) <- filter(mRNA_data,Name %in% periodic_list)$Name
-pheatmap(mRNA_data_per_noname,cluster_cols=FALSE)
+row.names(mRNA_data_per_noname) <- filter(mRNA_data, Name %in% periodic_list)$Name
+pheatmap(mRNA_data_per_noname,cluster_cols = FALSE)
 ```
 
-That's figure 2!
+That's Figure 2!
 
 {% include links.md %}
