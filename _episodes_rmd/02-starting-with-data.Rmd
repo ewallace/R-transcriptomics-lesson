@@ -76,9 +76,16 @@ optimized by being written in a compiled language (C++). An additional feature i
 This addresses a common problem with R in that all operations are conducted
 in-memory and thus the amount of data you can work with is limited by available
 memory. The database connections essentially remove that limitation in that you
-can connect to a database of many hundreds of GB, conduct queries on it directly, and pull back into R only what you need for analysis.
+can connect to a database of many hundreds of GB, conduct queries on it directly,
+and pull back into R only what you need for analysis.
 
-The package **`tidyr`** addresses the common problem of wanting to reshape your data for plotting and use by different R functions. Sometimes we want data sets where we have one row per measurement. Sometimes we want a data frame where each measurement type has its own column, and rows are instead more aggregated groups - like plots or aquaria. Moving back and forth between these formats is nontrivial, and **`tidyr`** gives you tools for this and more sophisticated  data manipulation.
+The package **`tidyr`** addresses the common problem of wanting to reshape your 
+data for plotting and use by different R functions. Sometimes we want data sets 
+where we have one row per measurement. Sometimes we want a data frame where each 
+measurement type has its own column, and rows are instead more aggregated groups 
+- like plots or aquaria. Moving back and forth between these formats is 
+non-trivial, and **`tidyr`** gives you tools for this and more sophisticated 
+data manipulation.
 
 To learn more about **`dplyr`** and **`tidyr`** after the workshop, you may want to check out this [handy data transformation with **`dplyr`** cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/data-transformation.pdf) and this [one about **`tidyr`**](https://github.com/rstudio/cheatsheets/raw/master/data-import.pdf).
 
@@ -108,17 +115,17 @@ The help tells us about an `n_max` argument that controls how many lines we read
 It will be easier if we make the file location an object rather than having to type it repeatedly. So let's read the first few lines of the file to check what it contains:
 
 ```{r, eval = TRUE, purl = TRUE}
-## Ask for help on read_lines
-periodic_list_file <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset02.txt.gz"
+# create an object to hold our file location
+periodically_expressed_genes_file <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset02.txt.gz"
 
-read_lines(periodic_list_file,n_max=10)
+# show the first 10 lines of the file (using the file location object)
+read_lines(periodically_expressed_genes_file, n_max = 10)
 ```
-
-
-The output looks like a character vector containing gene names, which is what we want, so let's load that into an object in our workspace.
-
+The output looks like a character vector containing gene names, which is what we want, so let's load that into an object in our workspace by removing the `n_max` argument from our previous `read_lines()` function and assigning it to a name for our object ("periodically_expressed_genes").
+ 
 ```{r, eval=TRUE, purl=TRUE}
-periodic_list <- read_lines(periodic_list_file)
+# create a data object by reading the whole file contents in
+periodically_expressed_genes <- read_lines(periodically_expressed_genes_file)
 ```
 
 Now we have the list of genes.
@@ -132,8 +139,8 @@ Now we have the list of genes.
 > > ## Solution
 > >
 > > ```{r, echo=FALSE}
-> > length(periodic_list)
-> > tail(periodic_list)
+> > length(periodically_expressed_genes)
+> > tail(periodically_expressed_genes)
 > > ```
 > {: .solution}
 {: .challenge}
@@ -265,7 +272,7 @@ Perfect!
 ##  So which ribi genes are periodically expressed?
 
 ```{r, eval = TRUE, purl = TRUE}
-filter(ribi_genes, SystematicName %in% periodic_list)
+filter(ribi_genes, SystematicName %in% periodically_expressed_genes)
 ```
 
 Many of them.
@@ -299,7 +306,7 @@ gene_names <- select(gene_names_big,Gene=gene,SystematicName=orf)
 > > ## Solution
 > >
 > > ```{r, echo=TRUE}
-> > filter(gene_names,SystematicName %in% periodic_list)
+> > filter(gene_names,SystematicName %in% periodically_expressed_genes)
 > > filter(gene_names,SystematicName == "NOP56")
 > > ```
 > {: .solution}
@@ -339,7 +346,7 @@ filter(mRNA_data, Gene %in% c("ACT1","NOP16","NOP56"))
 
 <!-- ```{r, eval = TRUE, purl = TRUE} -->
 
-<!-- mRNA_data_per_noname <- filter(mRNA_data,SystematicName %in% periodic_list) %>% -->
+<!-- mRNA_data_per_noname <- filter(mRNA_data,SystematicName %in% periodically_expressed_genes) %>% -->
 <!--     select(-SystematicName,-Gene) -->
 <!-- pheatmap(mRNA_data_per_noname) -->
 
@@ -347,7 +354,7 @@ filter(mRNA_data, Gene %in% c("ACT1","NOP16","NOP56"))
 
 
 <!-- ```{r, eval = TRUE, purl = TRUE} -->
-<!-- row.names(mRNA_data_per_noname) <- filter(mRNA_data,SystematicName %in% periodic_list)$SystematicName -->
+<!-- row.names(mRNA_data_per_noname) <- filter(mRNA_data,SystematicName %in% periodically_expressed_genes)$SystematicName -->
 <!-- pheatmap(mRNA_data_per_noname,cluster_cols=FALSE) -->
 <!-- ``` -->
 
