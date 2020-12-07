@@ -26,14 +26,16 @@ This workshop is based around a common situation in transcriptomics. We are inte
 
 Here the dataset is of cell cycle progression in the yeast *Saccharomyces cerevisiae*, from this paper: Translational control of lipogenic enzymes in the cell cycle of synchronous, growing yeast cells. Blank et al 2017 https://doi.org/10.15252/embj.201695050.
 
-<!-- Can we show an image of Figure 2 from the paper? -->
-
 <img src="../fig/embj201695050-fig-0002-m.jpg" alt="Fig 2 from Blank et al. 2017"/>
 
 In figure 2, the paper notes that ribosome biogenesis genes are periodically expressed during the cell cycle, but doesn't tell us which ones. **Can we find if our favourite gene is indeed periodically expressed?** So our data analysis goals are:
 
 * Find which ribosome biogenesis genes are on the list in figure 2
-* Is our favourite gene NOP56 (fibrillarin) periodically expressed?
+* Is our favourite gene NOP56 (fibrillarin, required for assembly of the 60S ribosomal subunit!) periodically expressed?
+
+<!-- How did this become our favourite gene? Can we look for others? -->
+
+In another lesson, we will then carry on using this data to: 
 * Recreate figure 2 so we can read the gene names.
 
 # Data Manipulation using **tidyverse**
@@ -47,7 +49,6 @@ already have installed the **`tidyverse`** package. This is an
 "umbrella-package" that installs several packages useful for data analysis which
 work together well such as **`readr`**, **`tidyr`**, **`dplyr`**, **`ggplot2`**, **`tibble`**, etc.
 
-
 The **`tidyverse`** package tries to address 3 common issues that arise when
 doing data analysis with some of the functions that come with R:
 
@@ -57,10 +58,7 @@ doing data analysis with some of the functions that come with R:
 3. Hidden arguments, having default operations that new learners are not aware
    of.
 
-
-
 To load the package type:
-
 
 ```{r, message = FALSE, purl = FALSE}
 ## load the tidyverse packages, incl. dplyr
@@ -69,30 +67,20 @@ library("tidyverse")
 
 ## What are **`readr`**, **`dplyr`** and **`tidyr`**?
 
-
-We'll read in our data using `read_lines()` and `read_tsv()` functions, from the tidyverse package 
-The package **`readr`**.
+We'll read in our data using `read_lines()` and `read_tsv()` functions, from the tidyverse package **`readr`**.
 
 The package **`dplyr`** provides easy tools for the most common data manipulation
 tasks. It is built to work directly with data frames, with many common tasks
-optimized by being written in a compiled language (C++). An additional feature is the
-ability to work directly with data stored in an external database. The benefits of
-doing this are that the data can be managed natively in a relational database,
-queries can be conducted on that database, and only the results of the query are
-returned.
+optimized by being written in a compiled language (C++). An additional feature is the ability to work directly with data stored in an external database. The benefits of doing this are that the data can be managed natively in a relational database, queries can be conducted on that database, and only the results of the query are returned.
 
 This addresses a common problem with R in that all operations are conducted
 in-memory and thus the amount of data you can work with is limited by available
 memory. The database connections essentially remove that limitation in that you
-can connect to a database of many hundreds of GB, conduct queries on it directly, and pull
-back into R only what you need for analysis.
+can connect to a database of many hundreds of GB, conduct queries on it directly, and pull back into R only what you need for analysis.
 
 The package **`tidyr`** addresses the common problem of wanting to reshape your data for plotting and use by different R functions. Sometimes we want data sets where we have one row per measurement. Sometimes we want a data frame where each measurement type has its own column, and rows are instead more aggregated groups - like plots or aquaria. Moving back and forth between these formats is nontrivial, and **`tidyr`** gives you tools for this and more sophisticated  data manipulation.
 
-To learn more about **`dplyr`** and **`tidyr`** after the workshop, you may want to check out this
-[handy data transformation with **`dplyr`** cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/data-transformation.pdf) and this [one about **`tidyr`**](https://github.com/rstudio/cheatsheets/raw/master/data-import.pdf).
-
-
+To learn more about **`dplyr`** and **`tidyr`** after the workshop, you may want to check out this [handy data transformation with **`dplyr`** cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/data-transformation.pdf) and this [one about **`tidyr`**](https://github.com/rstudio/cheatsheets/raw/master/data-import.pdf).
 
 
 ## Which ribosome biogenesis genes are in the list?
@@ -103,8 +91,8 @@ We need the list from figure 2 of the paper, and a list of ribosomal biogenesis 
 
 The paper says:
 
-    * We then used the log2-transformations of these ratio values as input (see Fig 2 and Dataset 1 within the Source Data for this figure; also deposited in GEO:GSE81932).
-    * Heatmap of the mRNA levels of the 144 genes (Dataset 2 within the Source Data for this figure) in common between the “Spellman Elu” and “This study” datasets.
+    > * We then used the log2-transformations of these ratio values as input (see Fig 2 and Dataset 1 within the Source Data for this figure; also deposited in GEO:GSE81932).
+    > * Heatmap of the mRNA levels of the 144 genes (Dataset 2 within the Source Data for this figure) in common between the “Spellman Elu” and “This study” datasets.
 
 This tells us that there are two sources for the data, one at the journal website and the other at NCBI's Gene Expression Omnibus. We can now search GEO:GSE81932, and see the website: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932.
 
@@ -115,7 +103,7 @@ And at the bottom, there is GSE81932_Dataset02.txt.gz. Let's download that, usin
 ?read_lines
 ```
 
-The help tells us about an `n_max` argument that controls how many lines we read. This is useful to inspect a file to see what it looks like before getting started. These functions can read data directly from online URLs, and automatically deal with compressed .gz files, which is very useful.
+The help tells us about an `n_max` argument that controls how many lines we read. This is useful to inspect a file to see what it looks like before getting started. These functions can read data directly from online URLs, and automatically deal with compressed `.gz` files, which is very useful.
 
 It will be easier if we make the file location an object rather than having to type it repeatedly. So let's read the first few lines of the file to check what it contains:
 
@@ -153,75 +141,131 @@ Now we have the list of genes.
 
 ### List of ribosomal biogenesis (ribi) genes.
 
-For this lesson, we will use the list of yeast ribi genes from https://www.yeastgenome.org/go/GO:0042254
+For this lesson, we will use the list of yeast ribi genes from the [**Saccharomyces Genome Database (SGD)**](https://www.yeastgenome.org/) Gene Ontology information, which can be found at: [yeastgenome.org/go/GO:0042254](https://www.yeastgenome.org/go/GO:0042254)
 
-Go to the *bottom* of the page for the longer computational list, click download and place the file in your `data` directory. You'll need to have a folder on your machine called "data" where you'll download the file. Take a look at it.
+Go to the *bottom* of the page for the longer **computational** list, click download and place the file in your `data` directory. You'll need to have a folder on your machine called "data" where you'll download the file. 
 
+Now we can take a look at it in R. 
+
+We are going to use the tidyverse function `read_tsv()` to read the contents of this file into R as a `tibble` (nice data frame) object. Inside the `read_tsv()` command, the first entry is a character string with the file name ("data/ribosome_biogenesis_annotations.txt")
 
 ```{r, eval=TRUE, purl=TRUE}
 
 ribi_annotation_file <- "data/ribosome_biogenesis_annotations.txt"
 
-read_lines(ribi_annotation_file,n_max=10)
+read_lines(ribi_annotation_file, n_max = 10)
 ```
 
 What does this tell us about the file?  It is a text file, the first few lines start with a `!` character, and afterwards the tab-delimited table starts with tabs encoded as `\t`.
 
-We are going to use the tidyverse function `read_tsv()` to read the contents of this file into R as a tibble (nice data frame) object. Inside the `read_tsv()` command, the first entry is a character string with the file name ("data/ribosome_biogenesis_annotations.txt")
-
 We can remove the unwanted lines in two ways. We can either skip them:
 
 ```{r, eval=TRUE,  purl=FALSE}
-read_tsv(ribi_annotation_file,skip=7)
+read_tsv(ribi_annotation_file, skip = 7)
 ```
 
 Or we can tell R that the `!` is a comment character, and lines after that should be ignored.
 
 ```{r, eval=TRUE,  purl=FALSE}
-read_tsv(ribi_annotation_file,comment="!")
+read_tsv(ribi_annotation_file, comment = "!")
 ```
 
-Because we will need to reuse, let's make the list into an object
+Because we will need to reuse this data, let's make it into an object.
 
 ```{r, eval=TRUE,  purl=FALSE}
-ribi_annotation <- read_tsv(ribi_annotation_file,comment="!")
+ribi_annotation <- read_tsv(ribi_annotation_file, comment = "!")
 ```
 
-This statement doesn't produce any output because, as you might recall,
-assignments don't display anything. If we want to check that our data has been
-loaded, we can see the contents of the data frame by typing its name: `ribi_annotation`.
+This statement doesn't show any of the data as output because, as you might recall, assignments don't display anything. If we want to check that our data has been loaded, we can see the contents of the data frame by typing its name: `ribi_annotation`, or using the `view()` command.
 
 ```{r, eval = FALSE, purl = FALSE}
-## Try also
+# view the data object
+ribi_annotation
+
+## try also:
 View(ribi_annotation)
 ```
 
-Now we have our data in R, we're going to learn how to inspect it, and some of the most common **`dplyr`** functions:
+At this point it's also worth checking the structure of our dataset using `str()` to find out whether it's what we'd expect, and look at what modes of data it contains. 
+
+```{r, eval=TRUE,  purl=FALSE}
+# check structure of the data
+str(ribi_annotation)
+```
+
+Now we have our data in R, we're going to learn how to inspect it more thoroughly, and manipulate it using some of the most common **`dplyr`** functions:
 
 - `select()`: subset columns
 - `n_distinct()` and `distinct()`: count or filter unique rows
 - `filter()`: subset rows on conditions
 - `mutate()`: create new columns by using information from other columns
-- `group_by()` and `summarize()`: create summary statisitcs on grouped data
+- `group_by()` and `summarize()`: create summary statistics on grouped data
 - `arrange()`: sort results
 - `count()`: count discrete values
 
+### Get and apply nice names: 
 
+Our `ribi_annotation` object contains a lot of extra information we won't be using, but it all relates to what different genes are annotated as, and how they relate to other genes.  
 
-### Give nice names: 
+Two of the variables in our object (`Gene` and `Gene Systematic Name`) are particularly useful when it comes to answering our questions about which genes were shown in Figure 2, and whether our 'favourite gene' NOP56 was periodically expressed.
+
+`Gene` holds the shorter more familiar Gene Names, while `Gene Systematic Name` contains the more 'official' name but is less helpful in telling us what that gene actually does. 
+
+We can also see from the results of `str()` that the `Qualifier` field holds information on what kind of genes these are.  
+
+Because we've downloaded this set of Gene Ontology records from the page for "Ribosome Biogenesis", we might expect that to be the only type of genes we've got in this data object, so let's check using the `dplyr::n_distinct()` function and the `dplyr::distinct()` function:
 
 ```{r, eval = TRUE, purl = TRUE}
-ribi_annotation_names <- select(ribi_annotation,Gene,Name="Gene Systematic Name")
+
+# how many (e.g. n) distinct entries for Qualifier?
+n_distinct(ribi_annotation$Qualifier)
+
+# show distinct (unique) entries
+distinct(ribi_annotation, Qualifier)
+
+```
+We can see that the answer to `n_distinct(ribi_annotation$Qualifier)` is 1, which is what we thought. We use can `distinct(ribi_annotation, Qualifier)` to confirm that, and show us what that unique entry is ("ribosome biogenesis").
+
+NOTE: You may have noticed that the format of these two commands is slightly different. For `distinct()`, we've provided TWO arguments (the data object and the variable name from that object), while for `n_distinct()` we've only provided one (the data object with the variable accessed via the `$` symbol, a common way of accessing variables in data frames). You can look at the help information for both functions (e.g. `?n_distinct`) to see why this is.  `n_distinct()` requires a vector of values as its main argument, whereas `distinct()` takes a data object (e.g. our tibble / data frames) and can then take optional variables to use when determining uniqueness - so here we've checked for unique rows from the `Qualifier` column.
+
+Now we want to pull out (select!) just the columns from `ribi_annotation` that we're interested in taking data from (`Gene` and `Gene Systematic Name`).
+
+We can do this with the `dplyr::select()` function:
+
+```{r, eval = TRUE, purl = TRUE}
+
+# pull out short informal gene names column and longer systematic names column as separate objet
+ribi_annotation_names <- select(ribi_annotation, Gene, SystematicName = "Gene Systematic Name")
+
+# check structure
+str(ribi_annotation_names)
+
+```
+Here we can see that we now have an object of 2 columns, containing the same number of rows as our original. Great.
+
+But is 218 the real number of unique genes? Or are there duplicates? Let's use `n_distinct()` and `distinct()` to make sure we've got no replicated names.
+
+```{r, eval = TRUE, purl = TRUE}
+
+# check number of distinct gene name & systematic name combos
 n_distinct(ribi_annotation_names)
 
+```
+
+Using `n_distinct()`, we can see that this is a smaller number than before, so there ARE some duplicates we can weed out.  This is where `distinct()` comes in:
+
+```{r, eval = TRUE, purl = TRUE}
+
+# create new object without duplicated rows of Gene Names & Systematic Names
 ribi_genes <- distinct(ribi_annotation_names)
 ```
 
+Perfect!
 
 ##  So which ribi genes are periodically expressed?
 
 ```{r, eval = TRUE, purl = TRUE}
-filter(ribi_genes, Name %in% periodic_list)
+filter(ribi_genes, SystematicName %in% periodic_list)
 ```
 
 Many of them.
@@ -243,7 +287,7 @@ gene_names_big <- read_tsv(gene_name_file,comment="#")
 ```
 
 ```{r, eval = TRUE, purl = TRUE}
-gene_names <- select(gene_names_big,Gene=gene,Name=orf)
+gene_names <- select(gene_names_big,Gene=gene,SystematicName=orf)
 ```
 
 
@@ -255,8 +299,8 @@ gene_names <- select(gene_names_big,Gene=gene,Name=orf)
 > > ## Solution
 > >
 > > ```{r, echo=TRUE}
-> > filter(gene_names,Name %in% periodic_list)
-> > filter(gene_names,Name == "NOP56")
+> > filter(gene_names,SystematicName %in% periodic_list)
+> > filter(gene_names,SystematicName == "NOP56")
 > > ```
 > {: .solution}
 {: .challenge}
@@ -268,7 +312,7 @@ gene_names <- select(gene_names_big,Gene=gene,Name=orf)
 
 mRNA_data <- read_tsv("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset01.txt.gz")
 
-names(mRNA_data)[1] <- "Name"
+names(mRNA_data)[1] <- "SystematicName"
 
 mRNA_data <- left_join(mRNA_data,gene_names)
 ```
@@ -282,28 +326,28 @@ filter(mRNA_data, Gene %in% c("ACT1","NOP16","NOP56"))
 
 ## Recreating the heatmap in figure 2.
 
-```{r, message = FALSE, purl = FALSE, eval=FALSE}
-## load the tidyverse packages, incl. dplyr
+```{r, message = FALSE, purl = FALSE, eval = FALSE}
+## load the pheatmap
 install.packages("pheatmap")
 ```
 
 ```{r, message = FALSE, purl = FALSE}
 ## load pheatmap
-library("pheatmap")
+library(pheatmap)
 ```
 
 
 ```{r, eval = TRUE, purl = TRUE}
 
-mRNA_data_per_noname <- filter(mRNA_data,Name %in% periodic_list) %>%
-    select(-Name,-Gene)
+mRNA_data_per_noname <- filter(mRNA_data,SystematicName %in% periodic_list) %>%
+    select(-SystematicName,-Gene)
 pheatmap(mRNA_data_per_noname)
 
 ```
 
 
 ```{r, eval = TRUE, purl = TRUE}
-row.names(mRNA_data_per_noname) <- filter(mRNA_data,Name %in% periodic_list)$Name
+row.names(mRNA_data_per_noname) <- filter(mRNA_data,SystematicName %in% periodic_list)$SystematicName
 pheatmap(mRNA_data_per_noname,cluster_cols=FALSE)
 ```
 
