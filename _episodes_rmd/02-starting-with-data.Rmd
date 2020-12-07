@@ -1,39 +1,59 @@
 ---
-title: "Starting with data"
+title: "Data Manipulation with dplyr"
 author: "Data Carpentry contributors"
-minutes: 20
+teaching: 60
+exercises: 30
+objectives:
+- "Select certain columns in a data frame with the **`dplyr`** function `select`."
+- "Extract certain rows in a data frame according to logical (boolean) conditions with the **`dplyr`** function `filter`."
+- "Link the output of one **`dplyr`** function to the input of another function with the 'pipe' operator `%>%`."
+- "Add new columns to a data frame that are functions of existing columns with `mutate`."
+- "Use the split-apply-combine concept for data analysis."
+- "Use `summarize`, `group_by`, and `count` to split a data frame into groups of observations, apply summary statistics for each group, and then combine the results."
+- "Employ the ‘split-apply-combine’ concept to split the data into groups, apply analysis to each group, and combine the results."
+- "Export a data frame to a .csv file."
+
+keypoints:
+- "Use the `dplyr` package to manipulate dataframes."
+- "Use `select()` to choose variables from a dataframe."
+- "Use `filter()` to choose data based on values."
+- "Use `group_by()` and `summarize()` to work with subsets of data."
+- "Use `mutate()` to create new variables."
+- "Reshape data using dplyr functions."
+- "Export data to .csv file."
+source: Rmd
 ---
 
 ```{r, echo=FALSE}
 source("../bin/chunk-options.R")
 ```
 
-------------
-
-> ### Learning Objectives
->
-> * Load external data from a .csv file into a data frame.
-> * Describe what a data frame is.
-> * Summarize the contents of a data frame.
-> * Use indexing to subset specific portions of data frames. 
-
-
-------------
-
 ## Our biological question: do our favourite genes change expression in this dataset?
 
-This workshop is based around a common situation in transcriptomics. We are interested in a group of genes, and another study has measured expression in conditions where expression of these genes might be interesting. Can we tell if our favourite genes have changing expression?
+This workshop is based around a common situation in transcriptomics. We are 
+interested in a group of genes, and another study has measured expression in 
+conditions where expression of these genes might be interesting. Can we tell if 
+our favourite genes have changing expression?
 
-Here the dataset is of cell cycle progression in the yeast *Saccharomyces cerevisiae*, from this paper: Translational control of lipogenic enzymes in the cell cycle of synchronous, growing yeast cells. Blank et al 2017 https://doi.org/10.15252/embj.201695050.
+Here the dataset is of cell cycle progression in the yeast *Saccharomyces cerevisiae*, 
+from this paper: *Translational control of lipogenic enzymes in the 
+cell cycle of synchronous, growing yeast cells.* Blank et al. 2017 
+https://doi.org/10.15252/embj.201695050.
 
 <img src="../fig/embj201695050-fig-0002-m.jpg" alt="Fig 2 from Blank et al. 2017"/>
 
-In figure 2, the paper notes that ribosome biogenesis genes are periodically expressed during the cell cycle, but doesn't tell us which ones. **Can we find if our favourite gene is indeed periodically expressed?** So our data analysis goals are:
+In Figure 2, the paper notes that ribosome biogenesis genes are periodically 
+expressed during the cell cycle, but doesn't tell us which ones. 
+
+**Can we find if our favourite gene is indeed periodically expressed?** 
+
+So our data analysis goals are:
 
 * Find which ribosome biogenesis genes are on the list in figure 2
-* Is our favourite gene NOP56 (fibrillarin, required for assembly of the 60S ribosomal subunit!) periodically expressed?
+* Is our favourite gene NOP56 (fibrillarin, required for assembly of the 60S 
+ribosomal sub-unit!) periodically expressed?
 
-<!-- How did this become our favourite gene? Can we look for others? -->
+<!-- How did this become our favourite gene? Can we look for others? lesson 03 mentions 2 more -->
 
 In another lesson, we will then carry on using this data to: 
 * Recreate figure 2 so we can read the gene names.
@@ -47,7 +67,8 @@ package for the first time you need to install it on your machine, and then you
 should import it in every subsequent R session when you need it. You should
 already have installed the **`tidyverse`** package. This is an
 "umbrella-package" that installs several packages useful for data analysis which
-work together well such as **`readr`**, **`tidyr`**, **`dplyr`**, **`ggplot2`**, **`tibble`**, etc.
+work together well such as **`readr`**, **`tidyr`**, **`dplyr`**, **`ggplot2`**, 
+**`tibble`**, etc.
 
 The **`tidyverse`** package tries to address 3 common issues that arise when
 doing data analysis with some of the functions that come with R:
@@ -67,11 +88,16 @@ library("tidyverse")
 
 ## What are **`readr`**, **`dplyr`** and **`tidyr`**?
 
-We'll read in our data using `read_lines()` and `read_tsv()` functions, from the tidyverse package **`readr`**.
+We'll read in our data using `read_lines()` and `read_tsv()` functions, from the 
+tidyverse package **`readr`**.
 
 The package **`dplyr`** provides easy tools for the most common data manipulation
 tasks. It is built to work directly with data frames, with many common tasks
-optimized by being written in a compiled language (C++). An additional feature is the ability to work directly with data stored in an external database. The benefits of doing this are that the data can be managed natively in a relational database, queries can be conducted on that database, and only the results of the query are returned.
+optimized by being written in a compiled language (C++). An additional feature 
+is the ability to work directly with data stored in an external database. The 
+benefits of doing this are that the data can be managed natively in a relational 
+database, queries can be conducted on that database, and only the results of the 
+query are returned.
 
 This addresses a common problem with R in that all operations are conducted
 in-memory and thus the amount of data you can work with is limited by available
@@ -101,12 +127,12 @@ The paper says:
     > * We then used the log2-transformations of these ratio values as input (see Fig 2 and Dataset 1 within the Source Data for this figure; also deposited in GEO:GSE81932).
     > * Heatmap of the mRNA levels of the 144 genes (Dataset 2 within the Source Data for this figure) in common between the “Spellman Elu” and “This study” datasets.
 
-This tells us that there are two sources for the data, one at the journal website and the other at NCBI's Gene Expression Omnibus. We can now search GEO:GSE81932, and see the website: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932.
+This tells us that there are two sources for the data, one at the journal website and the other at NCBI's Gene Expression Omnibus. We can now search GEO:GSE81932, and see the website: [https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932)
 
-And at the bottom, there is GSE81932_Dataset02.txt.gz. Let's download that, using a function called `read_lines()`.
+And at the bottom, there is `GSE81932_Dataset02.txt.gz`. Let's download that, using a function called `read_lines()`.
 
 ```{r, eval = FALSE, purl = FALSE}
-## Ask for help on read_lines
+# get the help page for read_lines()
 ?read_lines
 ```
 
@@ -128,8 +154,8 @@ The output looks like a character vector containing gene names, which is what we
 periodically_expressed_genes <- read_lines(periodically_expressed_genes_file)
 ```
 
-Now we have the list of genes.
-
+Now we have the list of genes which were found to be periodically expressed in 
+the study.
 
 > ## Challenge:
 >
@@ -269,66 +295,155 @@ ribi_genes <- distinct(ribi_annotation_names)
 
 Perfect!
 
-##  So which ribi genes are periodically expressed?
+###  So which ribi genes are periodically expressed?
+
+Now we know which genes are ribi genes, and we know which genes were periodically 
+expressed, how can we check which ribi genes are periodically expressed? 
+
+We can use `filter()`, combined with a handy operator `%in%`.
+
+TIP: if you want to find the help page for special symbolic operators like 
+`%in%`, you'll need to wrap them in quotes when searching: e.g. `?"%in%"` or 
+you'll end up with an error saying "unexpected SPECIAL".
+
+Applying the `filter()` function on our `ribi_genes` object, we can return the 
+rows where the systematic name appears in the `periodically_expressed_genes` object:
 
 ```{r, eval = TRUE, purl = TRUE}
 filter(ribi_genes, SystematicName %in% periodically_expressed_genes)
 ```
+So, it seems that plenty of these ribi (ribosome biogenesis) genes are periodically expressed during the cell cycle!
 
-Many of them.
+This answers our question about 
 
 ## Getting nicer gene names
 
-Gene names are in a nice format here:
-https://datadryad.org/bitstream/handle/10255/dryad.85608
+We can find the gene names in a nice format [from the Dryad Data Repository here](https://doi.org/10.5061/dryad.d644f)
+
+**Download the dataset** from the "Data Files" section on the right-hand side of the page. This will download a zip file to your local computer.  Extract the files within to somewhere sensible. 
+
+Copy or **move the file `scer-mrna-protein-absolute-estimate.txt` to the `data/` folder in the working directory** R is using. If you don't have a `data/` folder in your working directory, create it.  If you're working in Notable RStudio Server, you'll have to download the files locally, extract them, then upload the relevant file to your R working directory on the server.  
+
+<!-- # TODO: Replace figure2_dataset_file with github link to this required file once it's in main repo and edit the bit about downloading all of it! -->
+
+Again, we don't know immediately what the format of this text-based file will be, so we can use `read_lines()` to suss things out:
 
 ```{r, eval = TRUE, purl = TRUE}
-# TODO: Replace with github link once it's in main repo!
-gene_name_file <- "../data/scer-mrna-protein-absolute-estimate.txt"
+figure2_dataset_file <- "../data/scer-mrna-protein-absolute-estimate.txt"
 
-read_lines(gene_name_file, n_max = 10)
+# read first 10 lines
+read_lines(figure2_dataset_file, n_max = 10)
 ```
-
-```{r, eval = TRUE, purl = TRUE}
-gene_names_big <- read_tsv(gene_name_file,comment="#")
-```
+Here we can see that this file uses the `#` symbol to represent comments, so we can read in the file, adding a `comment = "#"` argument to our function:
 
 ```{r, eval = TRUE, purl = TRUE}
-gene_names <- select(gene_names_big,Gene=gene,SystematicName=orf)
+# read in file and save as object:
+figure2_dataset <- read_tsv(figure2_dataset_file, comment = "#")
 ```
+Now we've read the data in, it's good to take a quick check of the structure using `str()`. 
+```{r, eval = TRUE, purl = TRUE}
+str(figure2_dataset)
+```
+We can tell from the output of `str(figure2_dataset)` that the columns we're
+interested in which can help us answer our questions are likely to be `orf` and 
+`gene` since these are the gene names we're after.
+
+Let's pull out these relevant columns again, using `select()`, but let's make 
+the new column names in our new table the same as those we've extracted from the 
+`ribi_annotation_names` table:
+
+```{r, eval = TRUE, purl = TRUE}
+# create a new data object and rename the columns for the new table:
+figure2_gene_names <- select(figure2_dataset, Gene = gene, SystematicName = orf)
+```
+
+A quick check of `str()` or `dim()` on this new object and you can see we've got 
+the right dimensions on our new table.
 
 
 > ## Challenge: 
 >
-> 1. What are the names of the genes on the periodic list?
-> 2. Is NOP56 on the list?
+> 1. How would we find the names of the genes on the list of periodically expressed genes?
+> 2. How would we then extract only the shorter gene names from the output in Challenge 1.?
+> 3. Is NOP56 on the list?
 >
-> > ## Solution
-> >
-> > ```{r, echo=TRUE}
-> > filter(gene_names,SystematicName %in% periodically_expressed_genes)
-> > filter(gene_names,SystematicName == "NOP56")
-> > ```
+>> ## Solution
+>>
+>> ```{r, echo=TRUE}
+>> filter(figure2_gene_names, SystematicName %in% periodically_expressed_genes)
+>> 
+>> filter(figure2_gene_names, SystematicName %in% periodically_expressed_genes) %>% select(Gene)
+>> 
+>> filter(figure2_gene_names, Gene == "NOP56")
+>> ```
 > {: .solution}
 {: .challenge}
 
 
 ## What is NOP56 doing?
 
+Now that we know NOP56 *IS* periodically expressed during the cell cycle, we can 
+go on to look in more depth at that gene specifically.
+
+We can now read in `Dataset 1` from the Blank et al. paper:
+
+ > * We then used the log2-transformations of these ratio values as input (see 
+ Fig 2 and Dataset 1 within the Source Data for this figure; also deposited in GEO:GSE81932).
+
+... which we found the link for via the accession number GEO:GSE81932, at NCBI's 
+Gene Expression Omnibus website: [https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932).
+
+This file contains mRNA levels for each gene at specific measured cell sizes 
+(in femtoLitres), and so represents gene expression divided by cell size. Since 
+we know cells will grow larger through the cell cycle, we can orient ourselves 
+about what's happening for a particular gene such as NOP56.
+
+We can use `read_tsv()` in the same way as earlier:
+
 ```{r, eval = TRUE, purl = TRUE}
 
+# download the mRNA data 
 mRNA_data <- read_tsv("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset01.txt.gz")
 
-names(mRNA_data)[1] <- "SystematicName"
-
-mRNA_data <- left_join(mRNA_data,gene_names)
+# check structure
+str(mRNA_data)
 ```
+When you check the struture, you can see the measurement variables (ie. 40, 45, 
+50 femtoLitres etc) and you can see the variable `ORF`. 
+
+We can rename `ORF` to `SystematicName` to help us mentally (and 
+programmatically!) compare and link our different datasets.
 
 ```{r, eval = TRUE, purl = TRUE}
 
-filter(mRNA_data, Gene=="NOP56")
+# rename ORF column
+names(mRNA_data)[1] <- "SystematicName"
+```
+### Joining datasets
 
-filter(mRNA_data, Gene %in% c("ACT1","NOP16","NOP56"))
+Since we now have a column in common between our `mRNA_data` data frame and our 
+`figure2_gene_names` data frame, and we know that our gene of interest (NOP56) 
+is definitely periodically expressed in the cell cycle, we know that it should 
+show some interesting results when we look at the `mRNA_data` table.
+
+All we need to do now is add the gene names column which shows us which 
+Systematic Name refers to NOP56, and will let us label our plots with this 
+slightly friendlier name when we come to that.
+ 
+
+```{r, eval = TRUE, purl = TRUE}
+
+# join short gene names onto mRNA data from dataset 01 on `SystematicName`
+mRNA_data_named <- left_join(mRNA_data, figure2_gene_names)
+```
+
+<!-- TODO -->
+
+```{r, eval = TRUE, purl = TRUE}
+
+filter(mRNA_data_named, Gene == "NOP56")
+
+filter(mRNA_data_named, Gene %in% c("ACT1", "NOP16", "NOP56"))
 ```
 
 <!-- ## Recreating the heatmap in figure 2. -->
@@ -360,4 +475,4 @@ filter(mRNA_data, Gene %in% c("ACT1","NOP16","NOP56"))
 
 <!-- That's figure 2! -->
 
-<!-- {% include links.md %} -->
+{% include links.md %}
