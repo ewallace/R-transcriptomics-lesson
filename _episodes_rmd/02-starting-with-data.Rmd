@@ -162,12 +162,12 @@ the study.
 > 1. How many genes are on the list?
 > 2. Can you see the last genes in the list?
 >
-> > ## Solution
-> >
-> > ```{r, echo=FALSE}
-> > length(periodically_expressed_genes)
-> > tail(periodically_expressed_genes)
-> > ```
+>> ## Solution
+>>
+>> ```{r, echo=FALSE}
+>> length(periodically_expressed_genes)
+>> tail(periodically_expressed_genes)
+>> ```
 > {: .solution}
 {: .challenge}
 
@@ -419,6 +419,7 @@ programmatically!) compare and link our different datasets.
 # rename ORF column
 names(mRNA_data)[1] <- "SystematicName"
 ```
+
 ### Joining datasets
 
 Since we now have a column in common between our `mRNA_data` data frame and our 
@@ -428,23 +429,69 @@ show some interesting results when we look at the `mRNA_data` table.
 
 All we need to do now is add the gene names column which shows us which 
 Systematic Name refers to NOP56, and will let us label our plots with this 
-slightly friendlier name when we come to that.
+slightly friendlier name when we come to that later.
  
+There are multipe `*_join()` functions in `dplyr` which can help us add columns 
+from different datasets, filtering and matching rows based on particular `keys`.
+
+You can find more information about the types of join functions in the dplyr 
+package [here](https://dplyr.tidyverse.org/reference/join.html).
+
+For our purposes, we want to use one of the mutating join functions called 
+`left_join()`. `left_join()` includes all rows in x, adding columns from y, 
+based on a variable which is common between both datasets (this is the `by =` 
+argument).
+
+In our case, we want to keep pretty much all of the `mRNA_data` table, but join 
+the shorter gene names onto it from `figure2_gene_names` for each row where the 
+systematic names are the same (since systematic names are a column in both tables).
 
 ```{r, eval = TRUE, purl = TRUE}
 
 # join short gene names onto mRNA data from dataset 01 on `SystematicName`
-mRNA_data_named <- left_join(mRNA_data, figure2_gene_names)
+mRNA_data_named <- left_join(mRNA_data, figure2_gene_names, by = "SystematicName")
+
+# show few values from each variable
+glimpse(mRNA_data_named)
+
 ```
 
-<!-- TODO -->
+Now we can see that the `Gene` information from `figure2_gene_names` has been 
+joined onto the `mRNA_data` for each row where the `SystematicName` value
+matches, and `NA` has been added where there's no equivalent value in `Gene`.
+
+<!-- TODO: some of the drop_na() stuff maybe? filter out NA stuff? -->
+
+### What about NOP56?
+
+Now we're in a good position to find out how NOP56 gene expression changes across 
+the cell cycle, because we've got the data nicely organised and we know how to 
+filter out what we want!
+
+Let's do just that and pull out the observations for NOP56:
 
 ```{r, eval = TRUE, purl = TRUE}
 
+# filter out NOP56 observations:
 filter(mRNA_data_named, Gene == "NOP56")
+```
+We can see that the mRNA content fluctuates as the cell size increases. Interesting!
 
+How does this compare with a couple other genes of interest, for example: 
+ * ACT1: this is the gene which codes for important structural protein Actin
+ * NOP16: this is a gene involved in 60S ribosomal subunit biogenesis
+ 
+Let's pull all three genes out:
+
+```{r, eval = TRUE, purl = TRUE}
+# filter out 3 genes of interest:
 filter(mRNA_data_named, Gene %in% c("ACT1", "NOP16", "NOP56"))
 ```
+
+
+
+<!-- TODO: Long Vs Wide data! mRNA_data_named is a good example -->
+
 
 <!-- ## Recreating the heatmap in figure 2. -->
 
