@@ -22,14 +22,18 @@ source("../bin/chunk-options.R")
 
 ## Our biological question: do our favourite genes change expression in this dataset?
 
-This workshop is based around a common situation in transcriptomics. We are interested in a group of genes, and another study has measured expression in  conditions where expression these genes might be interesting. Can we tell if our favourite genes have changing expression?
+This workshop is based around a common situation in transcriptomics. We are interested in a group of genes, and another study has measured expression in conditions where expression of these genes might be interesting. Can we tell if our favourite genes have changing expression?
 
 Here the dataset is of cell cycle progression in the yeast *Saccharomyces cerevisiae*, from this paper: Translational control of lipogenic enzymes in the cell cycle of synchronous, growing yeast cells. Blank et al 2017 https://doi.org/10.15252/embj.201695050.
+
+<!-- Can we show an image of Figure 2 from the paper? -->
+
+<img src="../fig/embj201695050-fig-0002-m.jpg" alt="Fig 2 from Blank et al. 2017"/>
 
 In figure 2, the paper notes that ribosome biogenesis genes are periodically expressed during the cell cycle, but doesn't tell us which ones. **Can we find if our favourite gene is indeed periodically expressed?** So our data analysis goals are:
 
 * Find which ribosome biogenesis genes are on the list in figure 2
-* Is our favourite gene NOP56  (fibrillarin) periodically expressed?
+* Is our favourite gene NOP56 (fibrillarin) periodically expressed?
 * Recreate figure 2 so we can read the gene names.
 
 # Data Manipulation using **tidyverse**
@@ -228,9 +232,10 @@ Gene names are in a nice format here:
 https://datadryad.org/bitstream/handle/10255/dryad.85608
 
 ```{r, eval = TRUE, purl = TRUE}
-gene_name_file <- "https://datadryad.org/bitstream/handle/10255/dryad.85608/scer-mrna-protein-absolute-estimate.txt"
+# TODO: Replace with github link once it's in main repo!
+gene_name_file <- "../data/scer-mrna-protein-absolute-estimate.txt"
 
-read_lines(gene_name_file,n_max=10)
+read_lines(gene_name_file, n_max = 10)
 ```
 
 ```{r, eval = TRUE, purl = TRUE}
