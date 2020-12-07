@@ -324,33 +324,33 @@ filter(mRNA_data, Gene=="NOP56")
 filter(mRNA_data, Gene %in% c("ACT1","NOP16","NOP56"))
 ```
 
-## Recreating the heatmap in figure 2.
+<!-- ## Recreating the heatmap in figure 2. -->
 
-```{r, message = FALSE, purl = FALSE, eval = FALSE}
-## load the pheatmap
-install.packages("pheatmap")
-```
+<!-- ```{r, message = FALSE, purl = FALSE, eval = FALSE} -->
+<!-- ## load the pheatmap -->
+<!-- install.packages("pheatmap") -->
+<!-- ``` -->
 
-```{r, message = FALSE, purl = FALSE}
-## load pheatmap
-library(pheatmap)
-```
-
-
-```{r, eval = TRUE, purl = TRUE}
-
-mRNA_data_per_noname <- filter(mRNA_data,SystematicName %in% periodic_list) %>%
-    select(-SystematicName,-Gene)
-pheatmap(mRNA_data_per_noname)
-
-```
+<!-- ```{r, message = FALSE, purl = FALSE} -->
+<!-- ## load pheatmap -->
+<!-- library(pheatmap) -->
+<!-- ``` -->
 
 
-```{r, eval = TRUE, purl = TRUE}
-row.names(mRNA_data_per_noname) <- filter(mRNA_data,SystematicName %in% periodic_list)$SystematicName
-pheatmap(mRNA_data_per_noname,cluster_cols=FALSE)
-```
+<!-- ```{r, eval = TRUE, purl = TRUE} -->
 
-That's figure 2!
+<!-- mRNA_data_per_noname <- filter(mRNA_data,SystematicName %in% periodic_list) %>% -->
+<!--     select(-SystematicName,-Gene) -->
+<!-- pheatmap(mRNA_data_per_noname) -->
 
-{% include links.md %}
+<!-- ``` -->
+
+
+<!-- ```{r, eval = TRUE, purl = TRUE} -->
+<!-- row.names(mRNA_data_per_noname) <- filter(mRNA_data,SystematicName %in% periodic_list)$SystematicName -->
+<!-- pheatmap(mRNA_data_per_noname,cluster_cols=FALSE) -->
+<!-- ``` -->
+
+<!-- That's figure 2! -->
+
+<!-- {% include links.md %} -->
