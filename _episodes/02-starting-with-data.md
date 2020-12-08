@@ -104,20 +104,6 @@ library("tidyverse")
 ~~~
 {: .language-r}
 
-
-
-~~~
-Warning: package 'tidyverse' was built under R version 4.0.2
-~~~
-{: .error}
-
-
-
-~~~
-Warning: package 'dplyr' was built under R version 4.0.2
-~~~
-{: .error}
-
 ## What are **`readr`**, **`dplyr`** and **`tidyr`**?
 
 We'll read in our data using `read_lines()` and `read_tsv()` functions, from the 
@@ -1138,7 +1124,35 @@ systematic names are the same (since systematic names are a column in both table
 # join short gene names onto mRNA data from dataset 01 on `SystematicName`
 mRNA_data_named <- left_join(mRNA_data, scer_gene_names, by = "SystematicName")
 
-# show few values from each variable
+# show few values from first variable
+print(mRNA_data_named)
+~~~
+{: .language-r}
+
+
+
+~~~
+# A tibble: 6,713 x 10
+   SystematicName `40 fL` `45 fL` `50 fL` `55 fL` `60 fL` `65 fL` `70 fL`
+   <chr>            <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+ 1 Q0010            0.145  -0.421  NA      -1.26  -1.48   -0.111   1.15  
+ 2 Q0017           -1.32   -0.711   0.317   0.618 -0.498   0.208   0.0750
+ 3 Q0032           NA      NA      NA      NA     NA       2.57    1.06  
+ 4 Q0045            0.252  -0.339  -0.595  -0.281 -0.633   0.469   0.631 
+ 5 Q0050           -0.784  -0.635  -0.622  -0.222 -0.0648  0.760   0.766 
+ 6 Q0055           -0.369  -0.595  -0.670  -0.108 -0.244   0.599   0.725 
+ 7 Q0060           -0.143  -0.878  -0.712  -0.341 -0.0729  0.691   0.690 
+ 8 Q0065           -0.377  -1.02   -1.30   -0.139 -0.325   0.749   0.837 
+ 9 Q0070           -0.439  -0.305  -0.613  -0.492  0.0846 -0.0548  0.864 
+10 Q0075           -0.450  -0.582  -0.516  -0.199  0.0631  0.570   0.710 
+# … with 6,703 more rows, and 2 more variables: `75 fL` <dbl>, Gene <chr>
+~~~
+{: .output}
+
+
+
+~~~
+# show few values from all variables
 glimpse(mRNA_data_named)
 ~~~
 {: .language-r}

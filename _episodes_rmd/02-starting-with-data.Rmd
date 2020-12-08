@@ -97,7 +97,7 @@ doing data analysis with some of the functions that come with R:
 
 To load the package type:
 
-```{r, message = FALSE, purl = FALSE}
+```{r, message = FALSE, purl = FALSE, warning=FALSE, error=FALSE}
 ## load the tidyverse packages, incl. dplyr
 library("tidyverse")
 ```
@@ -574,9 +574,11 @@ systematic names are the same (since systematic names are a column in both table
 # join short gene names onto mRNA data from dataset 01 on `SystematicName`
 mRNA_data_named <- left_join(mRNA_data, scer_gene_names, by = "SystematicName")
 
-# show few values from each variable
-glimpse(mRNA_data_named)
+# show few values from first variable
+print(mRNA_data_named)
 
+# show few values from all variables
+glimpse(mRNA_data_named)
 ```
 
 Now we can see that the `Gene` information from `scer_gene_names` has been 
