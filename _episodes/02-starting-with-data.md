@@ -63,7 +63,16 @@ So our data analysis goals are:
 ribosomal sub-unit!) periodically expressed?
 
 In another lesson, we will then carry on using this data to: 
+
 * Recreate figure 2 so we can read the gene names.
+
+These goals teach common tasks in analysing tabular data:
+
+* compare two tables, to find which elements are in both tables (here, genes)
+* extract/filter a small portion of a large dataset for closer inspection
+* use two different names for related objects (here, systematic ORF IDs and gene names)
+
+This last point is extremely common in bioinformatics, where there are entrez gene IDs, uniprot protein IDs, etc. Often "in the wild" we need to take one set of data labeled with one ID, and compare it to another set of data labeled with a different ID. Tools in R and the tidyverse can help with that.
 
 # Data Manipulation using **tidyverse**
 
@@ -94,6 +103,20 @@ To load the package type:
 library("tidyverse")
 ~~~
 {: .language-r}
+
+
+
+~~~
+Warning: package 'tidyverse' was built under R version 4.0.2
+~~~
+{: .error}
+
+
+
+~~~
+Warning: package 'dplyr' was built under R version 4.0.2
+~~~
+{: .error}
 
 ## What are **`readr`**, **`dplyr`** and **`tidyr`**?
 
@@ -641,11 +664,13 @@ filter(ribi_genes, SystematicName %in% periodically_expressed_genes)
 ~~~
 {: .output}
 So, it seems that plenty of these ribi (ribosome biogenesis) genes are 
-periodically expressed during the cell cycle!
+periodically expressed during the cell cycle! Mission accomplished.
 
-## Find all genes listed in Figure 2
+## Find all gene names and IDs
 
-We can find the gene names from Figure 2 in a nice format [from the Dryad Data Repository here](https://doi.org/10.5061/dryad.d644f)
+In the above section, we used the `ribi_annotation_names` data to compare gene names (e.g. `NOP56`) with systematic IDs given in another dataset (e.g. `YLR197W`), but *only* for ribosomal biogenesis genes. Here, it will be helpful to do find gene names for all genes regardless of function.
+
+Usually the first step is to find a file in an archive with both sets of names. Today, we will use a file with yeast gene names, systematic IDs, and abundance information in a tidy format, [from the Dryad Data Repository here](https://doi.org/10.5061/dryad.d644f).
 
 **Download the dataset** from the "Data Files" section on the right-hand side of 
 the page. This will download a zip file to your local computer.  Extract the 
@@ -664,10 +689,10 @@ be, so we can use `read_lines()` to suss things out:
 
 
 ~~~
-figure2_dataset_file <- "../data/scer-mrna-protein-absolute-estimate.txt"
+scer_names_estimates_file <- "../data/scer-mrna-protein-absolute-estimate.txt"
 
 # read first 10 lines
-read_lines(figure2_dataset_file, n_max = 10)
+read_lines(scer_names_estimates_file, n_max = 10)
 ~~~
 {: .language-r}
 
@@ -692,7 +717,7 @@ can read in the file, adding a `comment = "#"` argument to our function:
 
 ~~~
 # read in file and save as object:
-figure2_dataset <- read_tsv(figure2_dataset_file, comment = "#")
+scer_names_estimates <- read_tsv(scer_names_estimates_file, comment = "#")
 ~~~
 {: .language-r}
 
@@ -717,7 +742,7 @@ using `str()`.
 
 
 ~~~
-str(figure2_dataset)
+str(scer_names_estimates)
 ~~~
 {: .language-r}
 
@@ -746,7 +771,7 @@ tibble [5,887 × 8] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
   .. )
 ~~~
 {: .output}
-We can tell from the output of `str(figure2_dataset)` that the columns we're
+We can tell from the output of `str(scer_names_estimates)` that the columns we're
 interested in which can help us answer our questions are likely to be `orf` and 
 `gene` since these are the gene names we're after.
 
@@ -757,7 +782,7 @@ the new column names in our new table the same as those we've extracted from the
 
 ~~~
 # create a new data object and rename the columns for the new table:
-figure2_gene_names <- select(figure2_dataset, Gene = gene, SystematicName = orf)
+scer_gene_names <- select(scer_names_estimates, Gene = gene, SystematicName = orf)
 ~~~
 {: .language-r}
 
@@ -775,7 +800,7 @@ the right dimensions on our new table.
 >>
 >> 
 >> ~~~
->> filter(figure2_gene_names, SystematicName %in% periodically_expressed_genes)
+>> filter(scer_gene_names, SystematicName %in% periodically_expressed_genes)
 >> ~~~
 >> {: .language-r}
 >> 
@@ -802,7 +827,7 @@ the right dimensions on our new table.
 >> 
 >> 
 >> ~~~
->> filter(figure2_gene_names, SystematicName %in% periodically_expressed_genes) %>% select(Gene)
+>> filter(scer_gene_names, SystematicName %in% periodically_expressed_genes) %>% select(Gene)
 >> ~~~
 >> {: .language-r}
 >> 
@@ -829,7 +854,22 @@ the right dimensions on our new table.
 >> 
 >> 
 >> ~~~
->> filter(figure2_gene_names, Gene == "NOP56")
+>> filter(scer_gene_names, SystematicName %in% periodically_expressed_genes, Gene == "NOP56")
+>> ~~~
+>> {: .language-r}
+>> 
+>> 
+>> 
+>> ~~~
+>> # A tibble: 0 x 2
+>> # … with 2 variables: Gene <chr>, SystematicName <chr>
+>> ~~~
+>> {: .output}
+>> 
+>> No, NOP56 is not on the list. We can double-check that NOP56 is on the list of `scer_gene_names` by:
+>> 
+>> ~~~
+>> filter(scer_gene_names, Gene == "NOP56")
 >> ~~~
 >> {: .language-r}
 >> 
@@ -842,20 +882,37 @@ the right dimensions on our new table.
 >> 1 NOP56 YLR197W       
 >> ~~~
 >> {: .output}
+>> which it is. But, NOP56's gene ID "YLR197W" is not on the list of `periodically_expressed_genes`. 
+>> We can double-check this by 
+>> 
+>> ~~~
+>> "YLR197W" %in% periodically_expressed_genes
+>> ~~~
+>> {: .language-r}
+>> 
+>> 
+>> 
+>> ~~~
+>> [1] FALSE
+>> ~~~
+>> {: .output}
+>>
 > {: .solution}
 {: .challenge}
 
 ### Sorting our datasets with `arrange()`
 
-We can order the rows of our data frame using the `dplyr::arrange()` function in 
+Often, we want to view data to emphasize one variable or another. 
+For example, we might want to find the genes with highest abundance in one dataset.
+To achieve this, we order the rows of our data frame, using the `dplyr::arrange()` function in 
 ascending and descending order on one or more variables. 
 
-Let's try that on our `figure2_dataset` table: 
+Let's try that on our `scer_names_estimates` table: 
 
 
 ~~~
 # arrange by `gene` 
-arrange(figure2_dataset, gene)
+arrange(scer_names_estimates, gene)
 ~~~
 {: .language-r}
 
@@ -883,7 +940,7 @@ arrange(figure2_dataset, gene)
 
 ~~~
 # show tail() of dataset
-arrange(figure2_dataset, gene) %>% tail()
+arrange(scer_names_estimates, gene) %>% tail()
 ~~~
 {: .language-r}
 
@@ -906,7 +963,7 @@ arrange(figure2_dataset, gene) %>% tail()
 
 ~~~
 # arrange by `gene` in DESCENDING order and `mrna` in ASCENDING order.
-arrange(figure2_dataset, desc(gene), mrna)
+arrange(scer_names_estimates, desc(gene), mrna)
 ~~~
 {: .language-r}
 
@@ -934,7 +991,7 @@ arrange(figure2_dataset, desc(gene), mrna)
 
 ~~~
 # show tail() of dataset (arranged by `gene` in DESCENDING order and `mrna` in ASCENDING order)
-arrange(figure2_dataset, desc(gene), mrna) %>% tail()
+arrange(scer_names_estimates, desc(gene), mrna) %>% tail()
 ~~~
 {: .language-r}
 
@@ -960,8 +1017,8 @@ descending order (using the `desc()` function around the relevant variable).
 
 ## What is NOP56 doing?
 
-Now that we know NOP56 *IS* periodically expressed during the cell cycle, we can 
-go on to look in more depth at that gene specifically.
+The paper reported that NOP56 is *not* periodically expressed during the cell cycle. 
+We can go on to look in more depth at that gene specifically, to find what it is doing.
 
 We can now read in `Dataset 1` from the Blank et al. paper:
 
@@ -1054,15 +1111,14 @@ names(mRNA_data)[1] <- "SystematicName"
 ### Joining datasets
 
 Since we now have a column in common between our `mRNA_data` data frame and our 
-`figure2_gene_names` data frame, and we know that our gene of interest (NOP56) 
-is definitely periodically expressed in the cell cycle, we know that it should 
-show some interesting results when we look at the `mRNA_data` table.
+`scer_gene_names` data frame, we can know show some the results when we look at 
+the `mRNA_data` table.
 
 All we need to do now is add the gene names column which shows us which 
 Systematic Name refers to NOP56, and will let us label our plots with this 
 slightly friendlier name when we come to that later.
  
-There are multipe `*_join()` functions in `dplyr` which can help us add columns 
+There are multiple `*_join()` functions in `dplyr` which can help us add columns 
 from different datasets, filtering and matching rows based on particular `keys`.
 
 You can find more information about the types of join functions in the dplyr 
@@ -1074,13 +1130,13 @@ based on a variable which is common between both datasets (this is the `by =`
 argument).
 
 In our case, we want to keep pretty much all of the `mRNA_data` table, but join 
-the shorter gene names onto it from `figure2_gene_names` for each row where the 
+the shorter gene names onto it from `scer_gene_names` for each row where the 
 systematic names are the same (since systematic names are a column in both tables).
 
 
 ~~~
 # join short gene names onto mRNA data from dataset 01 on `SystematicName`
-mRNA_data_named <- left_join(mRNA_data, figure2_gene_names, by = "SystematicName")
+mRNA_data_named <- left_join(mRNA_data, scer_gene_names, by = "SystematicName")
 
 # show few values from each variable
 glimpse(mRNA_data_named)
@@ -1105,7 +1161,7 @@ $ Gene           <chr> NA, NA, NA, "COX1", "AI1", "AI2", "AI3", "AI4", "AI5_A…
 ~~~
 {: .output}
 
-Now we can see that the `Gene` information from `figure2_gene_names` has been 
+Now we can see that the `Gene` information from `scer_gene_names` has been 
 joined onto the `mRNA_data` for each row where the `SystematicName` value
 matches, and `NA` has been added where there's no equivalent value in `Gene`.
 
@@ -1167,6 +1223,8 @@ filter(mRNA_data_named, Gene %in% c("ACT1", "NOP16", "NOP56"))
 We can start to see how helpful the `dplyr` functions will be in subsetting our 
 data to help our analyses and visualisation!
 
+In a later lesson, we will discuss how to turn tables like these into plots.
+
 ## Answering our questions: 
 
 Our data analysis goals were:
@@ -1181,7 +1239,7 @@ We've been able to compare which genes are listed in the dataset we downloaded
 for figure 2 against the genes listed as playing a part in ribosome biogenesis 
 in the Gene Ontology list on the Saccharomyces Genome Database (SGD).
 
-We've found out that NOP56 IS periodically expressed, and seen how its gene 
+We've found out that NOP56 is not reported to be periodically expressed, and seen how its gene 
 expression changes across the measurement timepoints.
 
 
