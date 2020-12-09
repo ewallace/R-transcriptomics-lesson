@@ -1,7 +1,16 @@
 ---
-title: "Reshaping and Plotting data"
+title: "Reshaping data with the tidyverse"
 author: "Data Carpentry contributors"
-minutes: 20
+teaching: 15
+exercises: 15
+objectives:
+- "Reshape data from wide to long using `pivot_longer()`."
+- "Appreciate how data can be transformed from untidy to tidy."
+
+keypoints:
+- "Use the `tidyr` package to manipulate dataframes."
+- "Pivot functions `pivot_longer()` and `pivot_wider()` can make tidy data."
+source: Rmd
 ---
 
 ```{r, echo=FALSE}
@@ -12,14 +21,14 @@ source("../bin/chunk-options.R")
 ```{r, echo=FALSE, message=FALSE}
 library("tidyverse")
 
-gene_name_file <- "https://datadryad.org/bitstream/handle/10255/dryad.85608/scer-mrna-protein-absolute-estimate.txt"
+gene_name_file <- "../data/scer-mrna-protein-absolute-estimate.txt"
 
 gene_names <- read_tsv(gene_name_file,comment="#") %>%
-    select(Gene=gene,Name=orf)
+    select(Gene=gene,SystematicName=orf)
 
 mRNA_data <- read_tsv("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset01.txt.gz")
 
-names(mRNA_data)[1] <- "Name"
+names(mRNA_data)[1] <- "SystematicName"
 
 mRNA_data <- left_join(mRNA_data,gene_names)
 ```
@@ -29,93 +38,45 @@ mRNA_data <- left_join(mRNA_data,gene_names)
 > ### Learning Objectives
 >
 > * Reshape a tibble
-> * Start with ggplot2
+> * Understand pivot_longer and pivot_wider, and how they can help tidy up data
 
 
 ------------
-
-## Our biological question: can we see the behaviour of our favourite genes?
-
-* Plot the individual trajectories of favourites: NOP16, NOP56, ACT1
 
 
 ## Reshape/tidy the data
 
 ```{r, eval = TRUE, purl = TRUE}
-gather(mRNA_data,key=Vol,value="log2_ratio",-Name,-Gene)
+pivot_longer(mRNA_data, 
+             cols = !c(SystematicName,Gene), 
+             names_to = "Vol", 
+             values_to = "log2_ratio")
 ```
 
 ```{r, eval = TRUE, purl = TRUE}
-mRNA_data_gathered <- 
-gather(mRNA_data,key=Vol,value="log2_ratio",-Name,-Gene) %>%
+mRNA_data_tidy <- 
+    pivot_longer(mRNA_data, 
+                 cols = !c(SystematicName,Gene), 
+                 names_to = "Vol", 
+                 values_to = "log2_ratio")%>%
     separate(Vol,into="Vol_fL") %>%
     mutate(Vol_fL = as.numeric(Vol_fL))
 
-mRNA_data_gathered
+mRNA_data_tidy
+
+```
+
+## Write it out.
+
+```{r, eval = TRUE, purl = TRUE}
+write_csv(mRNA_data_tidy, "../data/mRNA_data_tidy_named.csv")
 
 ```
 
 ```{r, eval = TRUE, purl = TRUE}
-mRNA_data_NOP16 <- filter(mRNA_data_gathered, Gene=="NOP16")
+mRNA_data_NOP16 <- filter(mRNA_data_tidy, Gene=="NOP16")
 mRNA_data_NOP16
 ```
-
-## Plot NOP16 data
-
-```{r, eval = TRUE, purl = TRUE}
-ggplot(data=mRNA_data_NOP16, aes(x=Vol_fL,y=log2_ratio)) +
-    geom_point()
-```
-
-
-```{r, eval = TRUE, purl = TRUE}
-ggplot(data=mRNA_data_NOP16, aes(x=Vol_fL,y=log2_ratio)) +
-    geom_line()
-```
-
-
-## Plot all the favourite genes data
-
-
-```{r, eval = TRUE, purl = TRUE}
-mRNA_data_3genes <- filter(mRNA_data_gathered, Gene %in% c("ACT1","NOP16","NOP56"))
-
-ggplot(data=mRNA_data_3genes, aes(x=Vol_fL,y=log2_ratio,colour=Gene)) +
-    geom_line()
-```
-
-```{r, eval = TRUE, purl = TRUE}
-ggplot(data=mRNA_data_3genes, aes(x=Vol_fL,y=Gene,fill=log2_ratio)) +
-    geom_tile()
-```
-
-```{r, eval = TRUE, purl = TRUE}
-ggplot(data=mRNA_data_3genes, aes(x=Vol_fL,y=Gene,fill=log2_ratio)) +
-    geom_tile() +
-    scale_fill_gradient2()
-```
-
-## How to make the plot look nice
-
-```{r, eval = TRUE, purl = TRUE}
-ggplot(data=mRNA_data_3genes, aes(x=Vol_fL,y=Gene,fill=log2_ratio)) +
-    geom_tile() +
-    scale_fill_gradient2() + 
-    theme_bw()
-```
-> ## Challenge: 
->
-> 1. Plot your other favourite genes. NOP6?
-> 2. Can you change the line colours to something nicer?
->
-> > ## Solution
-> >
-> > ```{r, echo=TRUE}
-> > mRNA_data_4genes <- filter(mRNA_data_gathered, Gene %in% c("ACT1","NOP16","NOP56","NOP6"))
-> > # ?scale_colour_brewer
-> > ```
-> {: .solution}
-{: .challenge}
 
 
 {% include links.md %}
