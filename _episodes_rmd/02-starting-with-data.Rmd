@@ -21,7 +21,7 @@ keypoints:
 source: Rmd
 ---
 
-```{r, echo=FALSE}
+```{r, echo = FALSE}
 source("../bin/chunk-options.R")
 ```
 
@@ -102,7 +102,7 @@ To load the package type:
 library("tidyverse")
 ```
 
-## What are **`readr`**, **`dplyr`** and **`tidyr`**?
+## What are **`readr`**, **`dplyr`**, and **`tidyr`**?
 
 We'll read in our data using `read_lines()` and `read_tsv()` functions, from the 
 tidyverse package **`readr`**.
@@ -138,16 +138,17 @@ to check out this [handy data transformation with **`dplyr`** cheatsheet](https:
 We need the list from figure 2 of the paper, and a list of ribosomal biogenesis 
 (ribi) genes.
 
-### List of genes from figure 2 in the paper
+### List of genes from Figure 2 in the paper
 
 The paper says:
 
-    > * We then used the log2-transformations of these ratio values as input (see Fig 2 and Dataset 1 within the Source Data for this figure; also deposited in GEO:GSE81932).
-    > * Heatmap of the mRNA levels of the 144 genes (Dataset 2 within the Source Data for this figure) in common between the “Spellman Elu” and “This study” datasets.
+    > We then used the log2-transformations of these ratio values as input (see Fig 2 and Dataset 1 within the Source Data for this figure; also deposited in GEO:GSE81932).
+    > Heatmap of the mRNA levels of the 144 genes (Dataset 2 within the Source Data for this figure) in common between the “Spellman Elu” and “This study” datasets.
 
 This tells us that there are two sources for the data, one at the journal website 
 and the other at NCBI's Gene Expression Omnibus. We can now search GEO:GSE81932, 
 and see the website: [https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81932)
+
 
 And at the bottom, there is `GSE81932_Dataset02.txt.gz`. Let's download that, 
 using a function called `read_lines()`.
@@ -207,7 +208,9 @@ the study.
 ### List of ribosomal biogenesis (ribi) genes.
 
 For this lesson, we will use the list of yeast ribi genes from the
-[**Saccharomyces Genome Database (SGD)**](https://www.yeastgenome.org/) Gene Ontology information, which can be found at: [yeastgenome.org/go/GO:0042254](https://www.yeastgenome.org/go/GO:0042254)
+[**Saccharomyces Genome Database (SGD)**](https://www.yeastgenome.org/).
+This list is found from the Gene Ontology Term: ribosome biogenesis,
+which can be found at: [yeastgenome.org/go/GO:0042254](https://www.yeastgenome.org/go/GO:0042254)
 
 Go to the *bottom* of the page for the longer **computational** list, click 
 download and place the file in your `data` directory. You'll need to have a 
@@ -220,7 +223,7 @@ this file into R as a `tibble` (nice data frame) object. Inside the `read_tsv()`
 command, the first entry is a character string with the file name 
 ("data/ribosome_biogenesis_annotations.txt")
 
-```{r, eval=TRUE, purl=TRUE}
+```{r, eval = TRUE, purl = TRUE}
 
 ribi_annotation_file <- "data/ribosome_biogenesis_annotations.txt"
 
@@ -307,7 +310,6 @@ got in this data object, so let's check using the `dplyr::n_distinct()` function
 and the `dplyr::distinct()` function:
 
 ```{r, eval = TRUE, purl = TRUE}
-
 # how many (e.g. n) distinct entries for Qualifier?
 n_distinct(ribi_annotation$Qualifier)
 
@@ -525,14 +527,13 @@ about what's happening for a particular gene such as NOP56.
 We can use `read_tsv()` in the same way as earlier:
 
 ```{r, eval = TRUE, purl = TRUE}
-
 # download the mRNA data 
 mRNA_data <- read_tsv("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81932/suppl/GSE81932_Dataset01.txt.gz")
 
 # check structure
 str(mRNA_data)
 ```
-When you check the struture, you can see the measurement variables (ie. 40, 45, 
+When you check the structure, you can see the measurement variables (ie. 40, 45, 
 50 femtoLitres etc) and you can see the variable `ORF`. 
 
 We can rename `ORF` to `SystematicName` to help us mentally (and 
@@ -596,7 +597,6 @@ filter out what we want!
 Let's do just that and pull out the observations for NOP56:
 
 ```{r, eval = TRUE, purl = TRUE}
-
 # filter out NOP56 observations:
 filter(mRNA_data_named, Gene == "NOP56")
 ```
