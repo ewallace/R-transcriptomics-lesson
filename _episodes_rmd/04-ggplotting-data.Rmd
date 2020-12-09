@@ -1,0 +1,112 @@
+---
+title: "Plotting data with ggplot2"
+author: "Data Carpentry contributors"
+teaching: 60
+exercises: 30
+objectives:
+- "Understand how plots are built by mapping data values to aesthetics"
+- "Plot a line plot and heat map from the same data, using ggplot2"
+
+keypoints:
+- "Plots are built from mapping data values to position, colour, and other aesthetics."
+- "Nice plotting relies on tidy data."
+- "The same data can be usefully plotted in different ways."
+source: Rmd
+---
+
+```{r, echo=FALSE}
+source("../bin/chunk-options.R")
+
+```
+
+```{r, echo=FALSE, message=FALSE}
+library("tidyverse")
+
+mRNA_data_tidy <- read_csv("../data/mRNA_data_tidy_named.csv")
+```
+
+------------
+
+> ### Learning Objectives
+>
+> * Reshape a tibble
+> * Start with ggplot2
+
+
+------------
+
+## Our biological question: can we see the behaviour of our favourite genes?
+
+* Plot the individual trajectories of favourite genes: NOP16, NOP56, ACT1.
+* See how different plotting methods bring out different features of the data.
+
+
+## Filter only data for NOP16
+
+```{r, eval = TRUE, purl = TRUE}
+mRNA_data_NOP16 <- filter(mRNA_data_tidy, Gene=="NOP16")
+mRNA_data_NOP16
+```
+
+## Plot NOP16 data
+
+Plot only as points.
+
+```{r, eval = TRUE, purl = TRUE}
+ggplot(data=mRNA_data_NOP16, aes(x=Vol_fL,y=log2_ratio)) +
+    geom_point()
+```
+
+Plot as a connected line.
+
+```{r, eval = TRUE, purl = TRUE}
+ggplot(data=mRNA_data_NOP16, aes(x=Vol_fL,y=log2_ratio)) +
+    geom_line()
+```
+
+
+## Plot all the favourite genes data
+
+
+```{r, eval = TRUE, purl = TRUE}
+mRNA_data_3genes <- filter(mRNA_data_tidy, Gene %in% c("ACT1","NOP16","NOP56"))
+
+ggplot(data=mRNA_data_3genes, aes(x=Vol_fL,y=log2_ratio,colour=Gene)) +
+    geom_line()
+```
+
+```{r, eval = TRUE, purl = TRUE}
+ggplot(data=mRNA_data_3genes, aes(x=Vol_fL,y=Gene,fill=log2_ratio)) +
+    geom_tile()
+```
+
+```{r, eval = TRUE, purl = TRUE}
+ggplot(data=mRNA_data_3genes, aes(x=Vol_fL,y=Gene,fill=log2_ratio)) +
+    geom_tile() +
+    scale_fill_gradient2()
+```
+
+## How to make the plot look nice
+
+```{r, eval = TRUE, purl = TRUE}
+ggplot(data=mRNA_data_3genes, aes(x=Vol_fL,y=Gene,fill=log2_ratio)) +
+    geom_tile() +
+    scale_fill_gradient2() + 
+    theme_bw()
+```
+> ## Challenge: 
+>
+> 1. Plot your other favourite genes. NOP6?
+> 2. Can you change the line colours to something nicer?
+>
+> > ## Solution
+> >
+> > ```{r, echo=TRUE}
+> > mRNA_data_4genes <- filter(mRNA_data_tidy, Gene %in% c("ACT1","NOP16","NOP56","NOP6"))
+> > # ?scale_colour_brewer
+> > ```
+> {: .solution}
+{: .challenge}
+
+
+{% include links.md %}
